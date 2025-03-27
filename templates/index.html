@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Golf Scorecard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="scorecard-container">
+    <h1>🏌️‍♂️ Golf Scorecard</h1>
+    <form method="POST">
+      <table class="scorecard">
+        <thead>
+          <tr>
+            <th>Hole</th>
+            {% for i in range(1, 19) %}
+              <th>{{ i }}</th>
+            {% endfor %}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Par</td>
+            {% for par in par_values %}
+              <td>{{ par }}</td>
+            {% endfor %}
+            <td>{{ par_values|sum }}</td>
+          </tr>
+          <tr>
+            <td>Score</td>
+            {% for i in range(1, 19) %}
+              <td>
+                <input type="number" name="hole_{{ i }}" min="1" max="10" required>
+              </td>
+            {% endfor %}
+            <td><span id="total-score">0</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="submit">Submit Scores</button>
+    </form>
+  </div>
+  <script src="{{ url_for('static', filename='js/scorecard.js') }}"></script>
+</body>
+</html>

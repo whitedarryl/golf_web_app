@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Golf Score Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="course-bg">
+  <div class="overlay"></div>
+
+  <div class="form-container">
+    <h1 class="tony-g-title">Golf Score Calculator</h1>
+    <form id="scorecard-form" onsubmit="return validateScores()">
+      <label for="name">Player Name:</label>
+      <input type="text" id="name" name="name" required>
+
+      <div class="score-grid">
+        {% for i in range(1, 10) %}
+          <input type="number" class="score-input" name="hole_{{ i }}" min="1" max="8" required>
+        {% endfor %}
+        <div class="readonly bold">Out</div>
+
+        {% for i in range(10, 19) %}
+          <input type="number" class="score-input" name="hole_{{ i }}" min="1" max="8" required>
+        {% endfor %}
+        <div class="readonly bold">In</div>
+
+        <div class="readonly bold">Total</div>
+      </div>
+
+      <button type="submit">Submit Scores</button>
+    </form>
+  </div>
+
+  <script>
+    function validateScores() {
+      const inputs = document.querySelectorAll('.score-input');
+      let valid = true;
+
+      inputs.forEach(input => {
+        const val = parseInt(input.value, 10);
+        if (isNaN(val) || val < 1 || val > 8) {
+          input.style.borderColor = 'red';
+          valid = false;
+        } else {
+          input.style.borderColor = '#ccc';
+        }
+      });
+
+      if (!valid) {
+        alert("Please enter numbers between 1 and 8 only.");
+      }
+
+      return valid;
+    }
+  </script>
+</body>
+</html>

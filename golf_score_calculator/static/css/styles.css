@@ -1,0 +1,151 @@
+@font-face {
+    font-family: 'Satisfy';
+    src: url('../fonts/Satisfy-Regular.ttf') format('truetype');
+}
+
+body.course-bg {
+    background-image: url('../images/deerfield.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'Satisfy', cursive;
+    margin: 0;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.6);
+    z-index: -1;
+}
+
+.form-container {
+    max-width: 900px;
+    margin: 60px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+h1.tony-g-title {
+    color: #166534;
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+label {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+    display: block;
+    color: #1f2937;
+}
+
+input[type="text"],
+input[type="number"] {
+    padding: 12px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr) 80px repeat(9, 1fr) 80px 100px;
+    gap: 8px;
+    margin-top: 25px;
+    align-items: center;
+}
+  
+.score-input {
+    padding: 16px;
+    font-size: 22px;
+    border-radius: 10px;
+    border: 1px solid #aaa;
+    text-align: center;
+    background: white;
+}
+
+.readonly {
+    background: #d0e0d0;
+    font-weight: bold;
+    font-size: 20px;
+    text-align: center;
+}
+
+.bold {
+    background: #ccc;
+}
+
+/* Remove number input arrows */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* 🧼 Clean number input (cross-browser) */
+input[type=number] {
+    -webkit-appearance: none;  /* Safari/Chrome */
+    -moz-appearance: textfield;  /* Firefox */
+    appearance: none;  /* Modern standard */
+  }  
+
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }  
+
+.dropdown {
+    list-style: none;
+    padding: 0;
+    margin-top: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    display: none;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+}
+
+button {
+    background-color: #166534;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+button:hover {
+    background-color: #134a2d;
+}
+
+.score-input {
+    width: 3.5em;           /* was 3em — just enough to show 2 digits clearly */
+    height: 2.8em;
+    font-size: 1.3rem;
+    text-align: center;
+    border-radius: 8px;
+    margin: 4px;
+  }  
+  
+  .score-input:invalid {
+    background-color: #fdd;
+  }
+  
