@@ -75,10 +75,6 @@
     text-align: center;
     transition: background 0.3s;
   }  
-  
-  .app-card:hover {
-    background-color: #1c6b3c;
-  }
 
   @keyframes fadeInUp {
     from {
@@ -105,5 +101,12 @@
   .app-card:hover {
     background-color: #1c6b3c;
     animation: bounce 0.2s ease-in-out;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
   }
   
