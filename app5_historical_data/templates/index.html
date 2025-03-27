@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Score History Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/select2.min.css') }}">
+</head>
+<body>
+
+    <div class="form-container">
+        <h2 class="section-header">
+            <img src="{{ url_for('static', filename='images/tg.webp') }}"
+                 alt="Golf Icon"
+                 style="height: 32px; vertical-align: middle; margin-right: 10px;">
+            Golf Score History Viewer
+        </h2>        
+        <form method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="player">Select Player:</label>
+                    <select name="player" id="player" class="form-control narrow-select" required>
+                        {% for player in players %}
+                            <option value="{{ player }}" {% if player == selected_player %}selected{% endif %}>{{ player }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+        
+                <div class="form-group">
+                    <label for="course">Select Course:</label>
+                    <select name="course" id="course" class="form-control narrow-select" required>
+                        {% for course in courses %}
+                            <option value="{{ course }}" {% if course == selected_course %}selected{% endif %}>{{ course }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        
+            <button type="submit">📊 View History</button>
+        </form>        
+        
+    </div>
+
+    {% if results %}
+    <div class="table-container">
+        <h2 class="section-header">{{ selected_course }} Score History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Total Score</th>
+                    <th>Date Played</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results %}
+                <tr>
+                    <td>{{ row.first_name }} {{ row.last_name }}</td>
+                    <td class="score">{{ row.total }}</td>
+                    <td>{{ row.date_played }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>            
+        </table>
+        <a href="/" class="back-home">🏠 Back to Home</a>
+    </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#player').select2({
+                placeholder: "Type to search players...",
+                width: 'resolve'
+            });
+    
+            $('#course').select2({
+                placeholder: "Select course...",
+                width: 'resolve'
+            });
+        });
+    </script>
+
+</body>
+</html>

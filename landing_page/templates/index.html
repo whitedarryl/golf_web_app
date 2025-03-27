@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Golf App Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+</head>
+<body class="course-bg">
+    <!-- Dimmed overlay -->
+    <div class="overlay"></div>
+
+    <div class="dashboard-container">
+        <h1>🏌️ Welcome to the Golf App Hub ⛳</h1>
+        <div class="card-list">
+            <a href="/golf_score_calculator" class="app-card">⛳ Golf Score Calculator</a>
+            <a href="/golf_script_runner" class="app-card">💻 Script Runner</a>
+            <a href="/callaway_results" class="app-card">📊 Callaway Results</a>
+            <a href="/five_results" class="app-card">🎯 Five Results</a>
+            <a href="/historical_data" class="app-card">📚 Historical Data</a>               
+        </div>
+    </div>
+</body>
+</html>

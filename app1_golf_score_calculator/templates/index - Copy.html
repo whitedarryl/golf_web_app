@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Scorecard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="/static/js/script.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-green-100 flex justify-center items-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full">
+        <h1 class="text-center text-2xl font-bold text-black-700">
+            <span class="tony-g-title">Tony G's {{ golf_course }} Tournament </span>
+        </h1>
+        
+        <form id="scorecard-form" class="mt-4">
+            <div class="relative">
+                <input type="text" id="player-name" placeholder="Player Name" 
+                    class="w-full p-2 border rounded handwritten">
+                <ul id="player-dropdown" class="absolute bg-white border shadow-lg w-full max-h-40 overflow-y-auto hidden"></ul>
+            </div>
+        
+            <!-- Hole numbers for Front 9 + OUT -->
+            <div class="grid grid-cols-10 gap-2 text-center font-bold text-green-700 mt-2">
+                <div>1</div> <div>2</div> <div>3</div> <div>4</div> <div>5</div> <div>6</div> <div>7</div> <div>8</div> <div>9</div> <div>OUT</div>
+            </div>
+        
+            <!-- Score input boxes for Front 9 + OUT Total Box -->
+            <div class="grid grid-cols-10 gap-2">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="1">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="2">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="3">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="4">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="5">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="6">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="7">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="8">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="9">
+                <input type="text" id="out-total" class="border p-2 text-center bg-gray-200 font-bold" readonly>
+            </div>
+
+            <!-- Hole numbers for Back 9 + IN -->
+            <div class="grid grid-cols-10 gap-2 text-center font-bold text-green-700 mt-2">
+                <div>10</div> <div>11</div> <div>12</div> <div>13</div> <div>14</div> <div>15</div> <div>16</div> <div>17</div> <div>18</div> <div>IN</div>
+            </div>
+        
+            <!-- Score input boxes for Back 9 + IN Total Box -->
+            <div class="grid grid-cols-10 gap-2">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="10">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="11">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="12">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="13">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="14">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="15">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="16">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="17">
+                <input type="number" class="score-input border p-2 text-center handwritten" data-hole="18">
+                <input type="text" id="in-total" class="border p-2 text-center bg-gray-200 font-bold" readonly>
+            </div>
+        
+            <!-- Overall Total BELOW the second 9 holes -->
+            <p id="overall-total" class="mt-6 text-lg font-bold text-green-700 handwritten text-center">
+                Overall Total: 0
+            </p>
+        
+            <button type="submit" class="mt-4 bg-green-600 text-white p-2 rounded w-full">
+                Submit Scores
+            </button>
+        </form>   
+        
+    </div>
+</body>
+</html>

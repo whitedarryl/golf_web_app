@@ -1,0 +1,58 @@
+@font-face {
+    font-family: 'Caveat';
+    src: url('./fonts/Caveat-Regular.ttf') format('truetype');
+}
+
+/* Increase overall font size */
+body {
+    font-size: 1.2rem; /* Slightly larger base text */
+}
+
+/* Make headers larger */
+h1 {
+    font-size: 2.2rem; /* Bigger title */
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 1.5rem; /* Larger than default */
+}
+
+/* Increase font size for hole numbers */
+.grid-cols-9 div {
+    font-size: 1.3rem;
+}
+
+/* Make input text larger */
+.score-input {
+    font-size: 1.4rem;
+    padding: 10px; /* More padding for better touch experience */
+}
+
+/* Make totals bigger */
+#front9-total, #back9-total, #overall-total {
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+/* Increase player input field size */
+#player-name {
+    font-size: 1.4rem;
+    padding: 10px;
+}
+
+
+/* @font-face {
+    font-family: 'Caveat';
+    src: url('/static/fonts/Caveat-Regular.ttf') format('truetype');
+}
+
+.handwritten {
+    font-family: 'Caveat', cursive !important;
+    font-size: 1.5rem;
+}
+
+.grid-cols-9 div {
+    text-align: center;
+    padding-bottom: 5px; /* Space between hole number and input */
+/* } */ 

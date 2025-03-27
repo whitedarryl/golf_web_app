@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Leaderboard PDF</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1, h2 { color: #166534; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+    th { background-color: #166534; color: white; }
+    tr:nth-child(even) { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>Tony G’s Rock Manor Tournament</h1>
+  <h2>Date: {{ course.date_played }}</h2>
+
+  <h2>🏆 Total Score Winners</h2>
+  <table>
+    <thead>
+      <tr><th>Place</th><th>Name</th><th>Total Score</th></tr>
+    </thead>
+    <tbody>
+      {% for player in total_results %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ player.first_name }} {{ player.last_name }}</td>
+          <td>{{ player.total_score }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>⭐ Net Score Winners</h2>
+  <table>
+    <thead>
+      <tr><th>Place</th><th>Name</th><th>Net Score</th></tr>
+    </thead>
+    <tbody>
+      {% for player in net_results %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ player.first_name }} {{ player.last_name }}</td>
+          <td>{{ player.net_score }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tony G’s Leaderboard</title>
+  <link rel="stylesheet" href="{{ url_for('callaway_results.static', filename='css/styles.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat&family=Dancing+Script&family=Satisfy&family=Shadows+Into+Light&family=Indie+Flower&family=Patrick+Hand&family=Gloria+Hallelujah&family=Just+Another+Hand&display=swap" rel="stylesheet">
+</head>
+<body class="course-bg">
+  <div class="overlay"></div>
+
+  <!-- 🏆 Tournament Title -->
+  <div class="tournament-header">
+    <h1>Tony G’s Rock Manor Tournament</h1>
+    <p><span class="icon">📅</span> Date: {{ course.date_played }}</p>
+  </div>
+
+  <!-- TOTAL SCORE SECTION -->
+  <div class="leaderboard-card">
+    <h2 class="collapsible-header" onclick="toggleCollapse(this)">
+      <span class="icon">🏆</span>
+      Top Players by <span class="highlight orange">Total Score</span>
+      <span class="collapse-icon">🔽</span>
+    </h2>
+    <div class="collapsible-content">
+      <table class="themed-table">
+        <thead>
+          <tr>
+            <th>Place</th>
+            <th>Name</th>
+            <th>Total Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set last_score = None %}
+          {% for player in total_results %}
+          <tr class="{{ loop.index % 2 == 0 and 'even-row' or '' }}">
+            <td>{{ loop.index }}</td>
+            <td>
+              {{ player.first_name }} {{ player.last_name }}
+              {% if last_score != player.total_score and loop.index0 + 1 < total_results|length and total_results[loop.index0 + 1].total_score == player.total_score %}
+                <span class="tie-icon" title="Won tiebreaker">✅</span>
+              {% endif %}
+            </td>
+            <td><strong>{{ player.total_score }}</strong></td>
+          </tr>
+          {% set last_score = player.total_score %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- NET SCORE SECTION -->
+  <div class="leaderboard-card">
+    <h2 class="collapsible-header" onclick="toggleCollapse(this)">
+      <span class="icon">⭐</span>
+      Top Players by <span class="highlight green">Net Score</span>
+      <span class="collapse-icon">🔽</span>
+    </h2>
+    <div class="collapsible-content">
+      <table class="themed-table">
+        <thead>
+          <tr>
+            <th>Place</th>
+            <th>Name</th>
+            <th>Total Score</th>
+            <th>Net Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set last_net = None %}
+          {% for player in net_results %}
+          <tr class="{{ loop.index % 2 == 0 and 'even-row' or '' }}">
+            <td>{{ loop.index }}</td>
+            <td>
+              {{ player.first_name }} {{ player.last_name }}
+              {% if last_net != player.net_score and loop.index0 + 1 < net_results|length and net_results[loop.index0 + 1].net_score == player.net_score %}
+                <span class="tie-icon" title="Won tiebreaker">✅</span>
+              {% endif %}
+            </td>
+            <td>{{ player.total_score }}</td>
+            <td><strong>{{ player.net_score }}</strong></td>
+          </tr>
+          {% set last_net = player.net_score %}
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <form method="POST" action="{{ url_for('callaway_results.leaderboard_pdf') }}">
+        <input type="hidden" name="total_positions" value="{{ total_results | length }}">
+        <input type="hidden" name="net_positions" value="{{ net_results | length }}">
+        <button type="submit" class="download-btn">📥 Download PDF</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🎛️ FOOTER CONTROLS -->
+  <footer>
+    <div class="control-bar">
+      <div class="control-group">
+        <label for="fontSwitcher">🖋️ <strong>Font Style</strong></label>
+        <select id="fontSwitcher" onchange="changeFont(this.value)">
+          <option value="Pacifico">Pacifico</option>
+          <option value="Caveat">Caveat</option>
+          <option value="Dancing Script">Dancing Script</option>
+          <option value="Satisfy">Satisfy</option>
+          <option value="Shadows Into Light">Shadows Into Light</option>
+          <option value="Indie Flower">Indie Flower</option>
+          <option value="Patrick Hand">Patrick Hand</option>
+          <option value="Gloria Hallelujah">Gloria Hallelujah</option>
+          <option value="Just Another Hand">Just Another Hand</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="fontSizeSwitcher">✏️ <strong>Font Size</strong></label>
+        <select id="fontSizeSwitcher" onchange="changeFontSize(this.value)">
+          <option value="14px">Small</option>
+          <option value="18px" selected>Medium</option>
+          <option value="22px">Large</option>
+          <option value="26px">Extra Large</option>
+        </select>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 🧠 Scripts -->
+  <script>
+    function changeFont(fontName) {
+      const fontFamily = `'${fontName}', cursive`;
+      document.querySelector('h1').style.fontFamily = fontFamily;
+      document.querySelectorAll('.leaderboard-card h2').forEach(el => el.style.fontFamily = fontFamily);
+      document.querySelectorAll('table th, table td').forEach(el => el.style.fontFamily = fontFamily);
+      document.body.style.fontFamily = fontFamily;
+      localStorage.setItem('preferredFont', fontName);
+    }
+
+    function changeFontSize(fontSize) {
+      const elements = document.querySelectorAll('body, h1, .leaderboard-card h2, table th, table td');
+      elements.forEach(el => el.style.fontSize = fontSize);
+      localStorage.setItem('preferredFontSize', fontSize);
+    }
+
+    function toggleCollapse(header) {
+      const content = header.nextElementSibling;
+      const icon = header.querySelector('.collapse-icon');
+      content.classList.toggle('collapsed');
+      icon.textContent = content.classList.contains('collapsed') ? '▶️' : '🔽';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedFont = localStorage.getItem('preferredFont');
+      const savedSize = localStorage.getItem('preferredFontSize');
+
+      if (savedFont) {
+        document.getElementById('fontSwitcher').value = savedFont;
+        changeFont(savedFont);
+      }
+
+      if (savedSize) {
+        document.getElementById('fontSizeSwitcher').value = savedSize;
+        changeFontSize(savedSize);
+      }
+    });
+  </script>
+</body>
+</html>
