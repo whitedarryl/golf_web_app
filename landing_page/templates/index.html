@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Golf App Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
-</head>
-<body class="course-bg">
-    <nav aria-label="Main navigation">
-      <div class="overlay"></div>
-    </nav>
+  <meta charset="UTF-8" />
+  <title>Golf App Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <main class="dashboard-container">
-        <h1>️Welcome to the Golf App Hub ⛳</h1>
-        <div class="card-list">
-            <a href="/golf_score_calculator" class="app-card">⛳ Golf Score Calculator</a>
-            <a href="/golf_script_runner" class="app-card">💻 Script Runner</a>
-            <a href="/callaway_results" class="app-card">📊 Callaway Results</a>
-            <a href="/five_results" class="app-card">🎯 Five Results</a>
-            <a href="/historical_data" class="app-card">📚 Historical Data</a>               
-        </div>
+  <!-- Fonts -->
+  <link rel="preload" href="{{ url_for('static', filename='fonts/Satisfy-Regular.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/PatrickHandSC-Regular.woff2') }}" as="font" type="font/woff2" crossorigin>
+
+  <!-- Styles -->
+  <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
+</head>
+
+<body style="background-image: url('{{ url_for('static', filename='images/scorecard-bg.jpg') }}');">
+  <main class="dashboard-container">
+    <h1>️Tony G's Golf Tournament</h1>
+    <div class="date">{{ current_date }}</div>
+
+    <div class="card-list">
+      <a href="/golf_score_calculator" class="app-card">⛳ Golf Score Calculator</a>
+      <a href="/golf_script_runner" class="app-card">💻 Script Runner</a>
+      <a href="/callaway_results" class="app-card">📊 Callaway Results</a>
+      <a href="/five_results" class="app-card">🎯 Five Results</a>
+      <a href="/historical_data" class="app-card">📚 Historical Data</a>               
     </div>
+  </main>
 </body>
 </html>

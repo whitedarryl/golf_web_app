@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Golf Score Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('score_calc.static', filename='css/scorecard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('score_calc.static', filename='css/awesomplete.css') }}">
+</head>
+<body>
+  <div class="scorecard">
+    <h1>🏌️ Tony G's {{ course_name }} Tournament</h1>
+    {% if course_date %}
+      <p class="course-date">{{ course_date }}</p>
+    {% endif %}
+
+    <div class="player-row">
+      <label for="playerName">Player:</label>
+      <input id="playerName" placeholder="Start typing a name..." autocomplete="off" />
+      <span id="progress" class="progress-text"></span>
+      <div id="progress-bar"></div>
+    </div>
+
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th>Hole</th>
+          {% for i in range(1, 10) %}<th>{{ i }}</th>{% endfor %}
+          <th>OUT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Score</td>
+          {% for i in range(1, 10) %}
+          <td><input type="number" class="score-input front" data-hole="{{ i }}" /></td>
+          {% endfor %}
+          <td><span id="outTotal">0</span></td>
+        </tr>
+      </tbody>
+
+      <thead>
+        <tr>
+          <th>Hole</th>
+          {% for i in range(10, 19) %}<th>{{ i }}</th>{% endfor %}
+          <th>IN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Score</td>
+          {% for i in range(10, 19) %}
+          <td><input type="number" class="score-input back" data-hole="{{ i }}" /></td>
+          {% endfor %}
+          <td><span id="inTotal">0</span></td>
+        </tr>
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <th colspan="10">TOTAL</th>
+          <th><span id="grandTotal">0</span></th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button id="submitBtn" disabled>Submit Scores</button>
+    <p id="submitStatus" class="submit-confirm">✔️ Score submitted!</p>
+  </div>
+
+  <script src="{{ url_for('score_calc.static', filename='js/scorecard.js') }}"></script>
+  <script src="{{ url_for('score_calc.static', filename='js/awesomplete.min.js') }}"></script>
+  <div id="toast" class="toast-message">✅ Score submitted!</div>
+</body>
+</html>
