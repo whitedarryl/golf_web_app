@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 from datetime import datetime
+import re
 import os
 
 # Load env vars
@@ -25,8 +26,10 @@ app.register_blueprint(score_calc_bp)
 # Root route
 @app.route("/")
 def landing():
-    today = datetime.today().strftime("%B %d, %Y")
-    return render_template("index.html", current_date=today)
+    course_name, _ = extract_course_info_from_filename()
+    course_date = datetime.today().strftime("%B %d, %Y")  # Always today's date
+    session['course_name'] = course_name  # ⬅️ Store in session
+    return render_template("index.html", course_name=course_name, course_date=course_date)
 
 def home():
     return render_template("index.html")
@@ -43,6 +46,20 @@ def run_scripts():
 
     print(f"✅ Running scripts for {course_name} on {course_date}")
     return jsonify(success=True)
+
+def extract_course_info_from_filename():
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    pattern = r"^(.*?)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\s+Callaway scoring sheet\.xls[x]?$"
+
+    for file in os.listdir(root_dir):
+        match = re.match(pattern, file)
+        if match:
+            course_name = match.group(1)
+            print(f"✅ Match found! Course: {course_name}")
+            return course_name, None
+
+    print("⚠️ No matching file found.")
+    return "Unknown Course", None
 
 @app.errorhandler(404)
 def not_found(e):

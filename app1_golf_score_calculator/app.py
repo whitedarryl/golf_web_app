@@ -2,7 +2,7 @@ import os
 import glob
 import pythoncom
 import win32com.client
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -39,6 +39,10 @@ def extract_names_from_excel(file_path):
         excel.Quit()
 
 @app.route("/")
+def calculator_home():
+    course_name = session.get('course_name', 'Unknown Course')
+    return render_template("score_calc/index.html", course_name=course_name)
+
 def index():
     return render_template("index.html")
 

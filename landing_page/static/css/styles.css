@@ -5,6 +5,8 @@ body {
   color: #222;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.4;
 }
 
 .dashboard-container {
@@ -19,47 +21,114 @@ body {
 
 h1 {
   font-family: 'Satisfy', cursive;
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin-bottom: 0.5rem;
+  transition: text-shadow 0.3s ease;
 }
 
-.date {
-  font-family: 'Patrick Hand SC', cursive;
-  font-size: 1.25rem;
+h1:hover {
+  text-shadow: 1px 2px 4px rgba(0,0,0,0.25);
+}
+
+.date,
+.course-date {
+  font-family: 'Satisfy', cursive;
+  font-size: 1.6rem;
   margin-bottom: 2rem;
   color: #444;
 }
 
+.player-row {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .card-list {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   gap: 1rem;
   margin-top: 2rem;
 }
 
 .app-card {
-  display: flex;
+  display: inline-flex;
+  font-family: 'Satisfy', cursive;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  background-color: #2ecc71;
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
+  font-size: 1.4rem;
+  height: 56px; /* Boost height too */
+  width: 300px; /* Slightly wider buttons */
+  max-width: 90vw;
+  background: linear-gradient(145deg, #2ecc71, #27ae60);
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 12px; /* MATCH the container */
   text-decoration: none;
   font-weight: bold;
-  min-width: 220px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  min-width: 180px;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .app-card:hover {
-  background-color: #27ae60;
-  transform: scale(1.05);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  animation: pulse 0.3s ease-in-out;
+  background: linear-gradient(145deg, #27ae60, #1e8449);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
 }
 
 .app-card i, .app-card svg, .app-card img {
   margin-right: 0.6rem;
+}
+
+.scorecard {
+  background-color: rgba(255, 255, 255, 0.95);
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 3rem 2rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 600px) {
+  .card-list {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .app-card {
+    width: 80%;
+    justify-content: flex-start;
+    padding-left: 1rem;
+  }
+}
+
+body {
+  background-image: url('../images/scorecard-bg.jpg');
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.emoji {
+  display: inline-block;
+  margin-right: 0.6rem;
+  transition: transform 0.3s ease;
+}
+
+.app-card:hover .emoji {
+  transform: rotate(-10deg) scale(1.2);
 }
