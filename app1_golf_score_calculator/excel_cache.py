@@ -1,128 +1,111 @@
 import os
-import glob
-import pythoncom
 import win32com.client
+import pythoncom
 
+EXCEL_PATH = None
+_excel_app = None
+_workbook = None
 
 class ExcelCache:
-    def __init__(self):
-        self.excel = None
-        self.wb = None
-        self.sheet = None
-        self.last_file = None
-        self.GOLF_FOLDER = os.getenv("GOLF_WEBAPP_FOLDER", "C:\\Golf Web App_backup")
+    @staticmethod
+    def get_excel_path():
+        global EXCEL_PATH
+        if EXCEL_PATH:
+            return EXCEL_PATH
 
-    def _open_excel(self):
-        pythoncom.CoInitialize()
-        self.excel = win32com.client.Dispatch("Excel.Application")
-        self.excel.Visible = False
-        self.excel.DisplayAlerts = False
-
-    def _get_file_path(self):
-        pattern = os.path.join(self.GOLF_FOLDER, "*Callaway scoring sheet.xls")
-        matches = glob.glob(pattern)
-        return matches[0] if matches else None
-
-    def _load(self):
-        if self.excel is None:
-            self._open_excel()
-
-        file_path = self._get_file_path()
-        if not file_path:
-            raise FileNotFoundError("Callaway Excel file not found.")
-
-        if self.wb:
-            self.wb.Close(SaveChanges=0)
-
-        self.wb = self.excel.Workbooks.Open(file_path)
-        self.sheet = self.wb.Worksheets("Scores")
-        self.last_file = file_path
-
-    def get_available_players(self):
-        sheet = self.get_sheet()
-        name_data = sheet.Range("A4:B153").Value
-        score_data = sheet.Range("D4:U153").Value
-
-        available = []
-
-        for i in range(len(name_data)):
-            first, last = name_data[i]
-            if not first and not last:
+        root_dir = os.path.dirname(os.path.dirname(__file__))
+        for file in os.listdir(root_dir):
+            if file.endswith("Callaway scoring sheet.xls"):
+                EXCEL_PATH = os.path.join(root_dir, file)
                 break
-            full_name = ' '.join(f"{first} {last}".split()).strip()
-            row_scores = score_data[i]
-            has_score = any(cell not in (None, "", 0) for cell in row_scores)
 
-            if full_name and not has_score:
-                available.append(full_name)
+        if not EXCEL_PATH:
+            raise FileNotFoundError("No Callaway scoring sheet file found")
 
-        return available
+        return EXCEL_PATH
 
-    def get_submitted_player_count(self):
-        sheet = self.get_sheet()
-        name_data = sheet.Range("A4:B153").Value
-        score_data = sheet.Range("D4:U153").Value
+    @staticmethod
+    def get_workbook():
+        global _workbook, _excel_app
+        if _workbook:
+            return _workbook
 
-        submitted = 0
+        pythoncom.CoInitialize()  # ✅ Required to avoid COM error
 
-        for i in range(len(name_data)):
-            first, last = name_data[i]
-            if not first and not last:
-                break
-            row_scores = score_data[i]
-            has_score = any(cell not in (None, "", 0) for cell in row_scores)
+        path = ExcelCache.get_excel_path()
+        _excel_app = win32com.client.Dispatch("Excel.Application")
+        _excel_app.Visible = False
+        _workbook = _excel_app.Workbooks.Open(path)
+        return _workbook
 
-            if first and last and has_score:
-                submitted += 1
+    @staticmethod
+    def get_sheet():
+        return ExcelCache.get_workbook().Sheets(2)  # 👈 Always "Scores"
 
-        return submitted
+    @staticmethod
+    def get_total_players(sheet=None):
+        if sheet is None:
+            wb = ExcelCache.get_workbook()
+            try:
+                sheet = wb.Sheets(2)  # ✅ Force second sheet, which is 'Scores'
+                print(f"✅ Loaded worksheet: {sheet.Name}")
+            except Exception as e:
+                print(f"❌ Could not load sheet 2 (Scores): {e}")
+                return 0
 
-    def get_total_players(self):
-        sheet = self.get_sheet()
-        name_data = sheet.Range("A4:B153").Value
+        print("🧪 Scanning for valid players in Scores! (A10:B159)")
+        name_data = sheet.Range("A10:B159").Value
         count = 0
-        for first, last in name_data:
-            if not first and not last:
-                break
-            if first and last:
+
+        for i, row in enumerate(name_data, start=10):
+            first, last = row
+            print(f"🔍 Row {i}: First='{first}', Last='{last}'")
+
+            if isinstance(first, str) and isinstance(last, str):
                 count += 1
+                print(f"✅ Counted as player #{count}")
+            else:
+                print(f"⏭️ Skipped row {i}")
+
+        print(f"🎯 Total valid players found: {count}")
         return count
 
-    def refresh(self):
-        print("🔄 Refreshing Excel cache...")
-        try:
-            if self.wb:
-                try:
-                    self.wb.Close(SaveChanges=0)
-                except Exception as e:
-                    print("⚠️ Couldn't close workbook (might be dead):", e)
-            if self.excel:
-                try:
-                    self.excel.Quit()
-                except Exception as e:
-                    print("⚠️ Couldn't quit Excel (might be dead):", e)
-        except Exception as e:
-            print("⚠️ Unexpected error during refresh cleanup:", e)
+    @staticmethod
+    def get_submitted_player_count():
+        wb = ExcelCache.get_workbook()
+        sheet = wb.Sheets(2)  # ✅ Force to "Scores"
 
-        self.wb = None
-        self.excel = None
-        self.sheet = None
-        self.loaded = False
-        self._load()
+        name_data = sheet.Range("A10:B159").Value
+        score_data = sheet.Range("D10:U159").Value
+        count = 0
 
-    def get_sheet(self):
-        try:
-            # Quick poke to test COM connection
-            _ = self.sheet.Cells(1, 1).Value
-            return self.sheet
-        except Exception:
-            print("⚠️ Sheet disconnected — reloading Excel.")
-            self.refresh()
-            return self.sheet
+        for name_row, score_row in zip(name_data, score_data):
+            first, last = name_row
+            if isinstance(first, str) and isinstance(last, str) and any(score_row):
+                count += 1
 
-    def close(self):
-        if self.wb:
-            self.wb.Close(SaveChanges=0)
-        if self.excel:
-            self.excel.Quit()
-        self.wb = self.sheet = self.excel = None
+        return count
+
+    @staticmethod
+    def get_submitted_players(sheet):
+        submitted_names = []
+        name_data = sheet.Range("A10:B159").Value
+        score_data = sheet.Range("D10:U159").Value
+
+        for name_row, score_row in zip(name_data, score_data):
+            first, last = name_row
+            if isinstance(first, str) and isinstance(last, str) and any(score_row):
+                submitted_names.append(f"{first} {last}")
+
+        return submitted_names
+
+    @staticmethod
+    def refresh_cache():
+        global _workbook, _excel_app
+        if _workbook:
+            try:
+                _workbook.Close(SaveChanges=True)
+            except Exception as e:
+                print(f"⚠️ Couldn't close workbook (might be dead): {e}")
+        _workbook = None
+        _excel_app = None

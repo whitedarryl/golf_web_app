@@ -13,6 +13,16 @@ load_dotenv()
 # Define base folder
 GOLF_FOLDER = os.getenv("GOLF_WEBAPP_FOLDER", "C:\\Golf Web App_backup")
 
+def extract_course_name_from_file():
+    root_dir = os.path.dirname(os.path.dirname(__file__))
+    pattern = r"^([\w\s]+?)\s+\w+\s+\d{4}\s+Callaway scoring sheet\.xls$"
+
+    for filename in os.listdir(root_dir):
+        match = re.match(pattern, filename)
+        if match:
+            return match.group(1).strip()
+
+    return "Unknown"
 
 def extract_course_name_and_today():
     pattern = os.path.join(GOLF_FOLDER, "*Callaway scoring sheet.xls")

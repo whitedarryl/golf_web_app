@@ -1,225 +1,110 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const inputs = document.querySelectorAll(".score-input");
-  const outTotalEl = document.getElementById("outTotal");
-  const inTotalEl = document.getElementById("inTotal");
-  const grandTotalEl = document.getElementById("grandTotal");
-  const submitBtn = document.getElementById("submitBtn");
   const playerInput = document.getElementById("playerName");
-  const progressEl = document.getElementById("progress");
+  const submitBtn = document.getElementById("submitBtn");
 
-  refreshPlayerOptions();
-  updateTotals();
+  let allNames = [];
+  let submittedNames = [];
 
-  window.addEventListener("load", () => {
-    playerInput.focus();
-  });
+  // ✅ Fetch and initialize Awesomplete
+  fetch("/golf_score_calculator/get_names")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        allNames = data.names;
+        submittedNames = data.submitted_names || [];
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !submitBtn.disabled) {
-      e.preventDefault();
-      submitBtn.click();
-    }
-  });
+        const availableNames = allNames.filter(
+          (name) => !submittedNames.includes(name)
+        );
 
-  function refreshPlayerOptions() {
-    progressEl.style.opacity = 1;
-    progressEl.textContent = "⏳ Loading players...";
+        console.log("✅ Available:", availableNames);
 
-    fetch("/score-calc/get_names")
-      .then(res => res.json())
-      .then(data => {
-        console.log("🔍 GET /get_names response:", data);
+        new Awesomplete(playerInput, {
+          list: availableNames,
+          minChars: 1,
+          autoFirst: true,
+        });
+      } else {
+        console.error("❌ Failed to load names:", data.message);
+      }
+    });
 
-        if (data.success) {
-          if (!window.awesompleteInstance) {
-            window.awesompleteInstance = setupAwesomplete(playerInput, data.names);
-          } else {
-            window.awesompleteInstance.list = data.names;
-          }
+  // 👀 Enable submit only if valid name and scores are filled
+  const inputs = document.querySelectorAll(".score-input");
+  const progressBar = document.getElementById("progress-bar");
 
-          const submitted = data.total - data.names.length;
-          const left = data.total - data.submitted;
-          const percent = (data.submitted / data.total) * 100;
+  function updateTotal(selector, outputId) {
+    const inputs = document.querySelectorAll(selector);
+    let total = 0;
+    inputs.forEach((input) => {
+      const val = parseInt(input.value, 10);
+      if (!isNaN(val)) total += val;
+    });
+    document.getElementById(outputId).textContent = total;
+    return total;
+  }
 
-          const bar = document.getElementById("progress-bar");
-          document.documentElement.style.setProperty('--progress-fill', `${percent}%`);
+  function checkForm() {
+    const name = playerInput.value.trim();
+    const hasName = name.length > 0;
+    const hasScores = [...inputs].some((i) => i.value);
+    submitBtn.disabled = !(hasName && hasScores);
+  }
 
-          if (percent >= 100) {
-            bar.classList.add("flash");
-          } else {
-            bar.classList.remove("flash");
-          }
-
-          progressEl.innerHTML = `${data.submitted} of ${data.total} players submitted | <span class="players-left">${left} left</span>`;
-          progressEl.style.opacity = 1;
-          document.documentElement.style.setProperty('--progress-fill', `${percent}%`);
+  inputs.forEach((input, idx) => {
+    input.setAttribute("min", 1);
+    input.setAttribute("max", 8);
+    input.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value);
+      if (!isNaN(val)) {
+        if (val < 1 || val > 8) {
+          e.target.value = "";
         } else {
-          console.warn("⚠️ Server returned an error:", data.message);
-          progressEl.textContent = "⚠️ Failed to load players.";
-        }
-      })
-      .catch(err => {
-        console.error("❌ Fetch error:", err);
-        progressEl.textContent = "❌ Error loading player list.";
-      });
-  }
-
-  function setupAwesomplete(input, names) {
-    const awesomplete = new Awesomplete(input, {
-      list: names,
-      minChars: 1,
-      autoFirst: true
-    });
-
-    let tabPressed = false;
-
-    input.addEventListener("keydown", e => {
-      if (e.key === "Tab") tabPressed = true;
-    });
-
-    input.addEventListener("blur", () => {
-      if (tabPressed && awesomplete.ul.querySelectorAll("li").length) {
-        awesomplete.select(awesomplete.ul.querySelector("li"));
-        setTimeout(() => {
-          const firstScoreInput = document.querySelector(".score-input");
-          if (firstScoreInput) firstScoreInput.focus();
-        }, 50);
-      }
-      tabPressed = false;
-    });
-
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        const items = awesomplete.ul.querySelectorAll("li");
-        if (items.length) {
-          awesomplete.select(items[0]);
-          e.preventDefault();
-          setTimeout(() => {
-            const firstScoreInput = document.querySelector(".score-input");
-            if (firstScoreInput) firstScoreInput.focus();
-          }, 50);
+          // Move to next box automatically
+          if (idx < inputs.length - 1) inputs[idx + 1].focus();
         }
       }
+      updateTotal(".score-input.front", "outTotal");
+      updateTotal(".score-input.back", "inTotal");
+      document.getElementById("grandTotal").textContent =
+        updateTotal(".score-input.front", "outTotal") +
+        updateTotal(".score-input.back", "inTotal");
+      checkForm();
     });
-
-    return awesomplete;
-  }
-
-  function calcTotal(inputs) {
-    return Array.from(inputs)
-      .map(input => parseInt(input.value) || 0)
-      .reduce((a, b) => a + b, 0);
-  }
-
-  function updateTotals() {
-    const frontInputs = document.querySelectorAll(".score-input.front");
-    const backInputs = document.querySelectorAll(".score-input.back");
-
-    const out = calcTotal(frontInputs);
-    const inn = calcTotal(backInputs);
-
-    outTotalEl.textContent = out;
-    inTotalEl.textContent = inn;
-    grandTotalEl.textContent = out + inn;
-
-    checkIfAllFilled();
-  }
-
-  function checkIfAllFilled() {
-    const allFilled = Array.from(inputs).every(
-      input => /^[1-8]$/.test(input.value)
-    );
-    submitBtn.disabled = !allFilled || !playerInput.value.trim();
-  }
-
-  function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
-  }
-
-  function clearForm() {
-    inputs.forEach(input => input.value = "");
-    playerInput.value = "";
-    updateTotals();
-  }
-
-  inputs.forEach((input, index) => {
-    input.addEventListener("input", e => {
-      const val = e.target.value;
-
-      if (!/^[1-8]$/.test(val)) {
-        e.target.value = "";
-        return;
-      }
-
-      if (index + 1 < inputs.length) {
-        inputs[index + 1].focus();
-      }
-
-      updateTotals();
-    });
-
-    input.addEventListener("keydown", e => {
-      if (e.key === "Backspace" && !e.target.value && index > 0) {
-        inputs[index - 1].focus();
-      }
-    });
-
-    input.addEventListener("paste", e => e.preventDefault());
   });
 
-  playerInput.addEventListener("input", checkIfAllFilled);
+  playerInput.addEventListener("input", checkForm);
 
   submitBtn.addEventListener("click", () => {
-    const playerName = playerInput.value.trim();
-    if (!playerName) {
-      alert("Please select a player.");
-      return;
-    }
+    const name = playerInput.value.trim();
+    const scores = [...inputs].map((i) => parseInt(i.value) || 0);
+    const out = updateTotal(".score-input.front", "outTotal");
+    const inn = updateTotal(".score-input.back", "inTotal");
+    const total = out + inn;
 
-    const scores = Array.from(inputs).map(
-      input => parseInt(input.value) || 0
-    );
-
-    const out = parseInt(outTotalEl.textContent);
-    const inn = parseInt(inTotalEl.textContent);
-    const total = parseInt(grandTotalEl.textContent);
-
-    fetch("/score-calc/submit", {
+    fetch("/golf_score_calculator/submit", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: playerName,
-        scores,
-        out,
-        inn,
-        total
-      })
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, scores, out, inn, total }),
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.success) {
           showToast("✅ Score submitted!");
-          document.getElementById("submitStatus").style.display = "block";
-
-          progressEl.classList.remove("animated");
-          void progressEl.offsetWidth;
-          progressEl.classList.add("animated");
-
-          setTimeout(() => {
-            document.getElementById("submitStatus").style.display = "none";
-          }, 3000);
-
-          refreshPlayerOptions();
-          clearForm();
-          playerInput.focus();
+          playerInput.value = "";
+          inputs.forEach((i) => (i.value = ""));
+          document.getElementById("outTotal").textContent = "0";
+          document.getElementById("inTotal").textContent = "0";
+          document.getElementById("grandTotal").textContent = "0";
+          checkForm();
+          location.reload(); // ✅ Reload to refresh player list
         } else {
           alert("❌ Error: " + data.message);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         alert("❌ Unexpected error.");
       });

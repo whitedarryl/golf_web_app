@@ -1,59 +1,38 @@
 import os
-import glob
-import pythoncom
-import win32com.client
-from flask import Flask, render_template, request, jsonify, session
-from dotenv import load_dotenv
+import re
+import atexit
+from flask import Flask, session
+from .routes import routes
+from .utils.excel_session import close_excel
 
-load_dotenv()
+def extract_course_name_from_file(folder=None):
+    if folder is None:
+        folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    print("📂 Scanning directory:", folder)
+    pattern = re.compile(
+        r'^(.+?)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\s+Callaway scoring sheet\.xls$',
+        re.IGNORECASE
+    )
+    for filename in os.listdir(folder):
+        print("🔎 Checking file:", filename)
+        match = pattern.match(filename)
+        if match:
+            course_name = match.group(1)
+            print("✅ Matched course name:", course_name)
+            return course_name
+    print("❌ No course file matched pattern.")
+    return "Unknown Course"
 
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = "super-secret-key"
 
-GOLF_FOLDER = os.getenv("GOLF_FOLDER", "C:\\Golf")
+    @app.before_request
+    def set_course():
+        if 'course_name' not in session:
+            session['course_name'] = extract_course_name_from_file()
 
-def find_callaway_excel():
-    """Find the most recent Callaway Excel file in the Golf folder."""
-    files = glob.glob(os.path.join(GOLF_FOLDER, "*Callaway*.xls*"))
-    if not files:
-        raise FileNotFoundError("No Callaway Excel file found in Golf folder.")
-    return max(files, key=os.path.getctime)
+    app.register_blueprint(routes, url_prefix='/')  # <---- notice it's "/"
+    return app
 
-def extract_names_from_excel(file_path):
-    """Open Excel and pull golfer names from specific sheet."""
-    pythoncom.CoInitialize()
-    excel = win32com.client.Dispatch("Excel.Application")
-    wb = None
-    try:
-        wb = excel.Workbooks.Open(file_path)
-        sheet = wb.Worksheets("Team Callaway")
-        names = []
-
-        for i in range(8, 72):
-            val = sheet.Cells(i, 2).Value
-            if val:
-                names.append(val)
-        return names
-    finally:
-        if wb:
-            wb.Close(SaveChanges=0)
-        excel.Quit()
-
-@app.route("/")
-def calculator_home():
-    course_name = session.get('course_name', 'Unknown Course')
-    return render_template("score_calc/index.html", course_name=course_name)
-
-def index():
-    return render_template("index.html")
-
-@app.route("/get_names")
-def get_names():
-    try:
-        excel_file = find_callaway_excel()
-        names = extract_names_from_excel(excel_file)
-        return jsonify(success=True, names=names)
-    except Exception as e:
-        return jsonify(success=False, message=str(e)), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
+app = create_app()

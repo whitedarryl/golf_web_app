@@ -26,9 +26,10 @@ app.register_blueprint(score_calc_bp)
 # Root route
 @app.route("/")
 def landing():
-    course_name, _ = extract_course_info_from_filename()
-    course_date = datetime.today().strftime("%B %d, %Y")  # Always today's date
-    session['course_name'] = course_name  # ⬅️ Store in session
+    course_name, course_date = extract_course_info_from_filename()
+    session["course_name"] = course_name
+    session["course_date"] = course_date
+    print("🏌️ Landing set course:", course_name)
     return render_template("index.html", course_name=course_name, course_date=course_date)
 
 def home():
