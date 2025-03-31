@@ -111,14 +111,16 @@
     function showToast(message) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
+      toast.style.visibility = "visible"; // Ensure visibility
       toast.classList.add("show");
   
       setTimeout(() => {
         toast.classList.remove("show");
+        toast.style.visibility = "hidden"; // Hide after timeout
       }, 3000);
     }
   </script>  
 
-  <div id="toast" class="toast-message" style="display: none;"></div>
+  <div id="toast" class="toast-message" style='visibility: hidden;'></div>
 </body>
 </html>
