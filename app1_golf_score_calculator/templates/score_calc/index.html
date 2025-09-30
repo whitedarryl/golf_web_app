@@ -47,8 +47,8 @@
       <label for="playerName">Player:</label>
       <input id="playerName" placeholder="Start typing a name..." autocomplete="off" />
       <span id="progress" class="progress-text">
-        {{ submitted_count }} of {{ total_count }} players submitted |
-        <strong class="players-left">✔️ {{ players_left }} left</strong>
+        <span id="submittedPlayers">{{ submitted_count }}</span> of <span id="totalPlayers">{{ total_count }}</span> players submitted |
+        <strong class="players-left">{{ players_left }} left</strong>
       </span>
       
       <div id="progress-bar"></div>

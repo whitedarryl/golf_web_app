@@ -70,9 +70,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const isVisible = statusSpan.style.display !== "none";
       statusSpan.style.display = isVisible ? "none" : "inline";
     });
-  
-    // Hide it by default
-    statusSpan.style.display = "none";
+
+    // Show it by default
+    statusSpan.style.display = "inline";
   }
 
   if (adminToggle && adminControls) {
@@ -183,11 +183,19 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch("/golf_score_calculator/get_counts")
           .then(r => r.json())
           .then(ct => {
-            document.getElementById("submittedPlayers").textContent = ct.submitted;
-            document.getElementById("totalPlayers").textContent = ct.total;
-            document.querySelector(".players-left").textContent = `${ct.left} left`;
+            console.log("🔍 JS - Received count data:", ct);
+            const submittedEl = document.getElementById("submittedPlayers");
+            const totalEl = document.getElementById("totalPlayers");
+            const leftEl = document.querySelector(".players-left");
+            console.log("🔍 JS - Found elements:", {submittedEl, totalEl, leftEl});
+
+            if (submittedEl) submittedEl.textContent = ct.submitted;
+            if (totalEl) totalEl.textContent = ct.total;
+            if (leftEl) leftEl.textContent = `${ct.left} left`;
+
+            console.log("🔍 JS - Updated display to:", {submitted: ct.submitted, total: ct.total, left: ct.left});
           })
-          .catch(err => console.error("Failed to load counts:", err));
+          .catch(err => console.error("❌ Failed to load counts:", err));
 
         console.log(`✅ Autocomplete ready with ${names.length} names`);
       })

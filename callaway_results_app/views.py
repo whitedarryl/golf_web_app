@@ -37,7 +37,7 @@ def fetch_ranked_results(order_by_field, exclude_winners=False, winners=None, to
         print("🧠 ORDER BY clause:", order_by_clause)
 
         query = f"""
-            SELECT s.first_name, s.last_name, s.total, s.net_score, {order_by_clause}
+            SELECT DISTINCT s.first_name, s.last_name, s.total, s.net_score, {order_by_clause}
             FROM scores s
             WHERE s.{order_by_field} > 0
         """
