@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 import random
 import traceback
 import re
+import mysql.connector
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -106,6 +107,13 @@ def index():
         course_id = cursor.fetchone()[0]
 
     counts = get_player_counts(course_id)
+
+    # Debug logging
+    print(f"🔍 INDEX ROUTE - course_id: {course_id}")
+    print(f"🔍 INDEX ROUTE - counts: {counts}")
+    print(f"🔍 INDEX ROUTE - submitted_count: {counts['submitted_count']}")
+    print(f"🔍 INDEX ROUTE - total_count: {counts['total_count']}")
+    print(f"🔍 INDEX ROUTE - players_left: {counts['players_left']}")
 
     return render_template(
       "index.html",
@@ -923,11 +931,20 @@ def get_counts():
 
         counts = get_player_counts(course_id)
 
-        return jsonify({
+        print(f"🔍 GET_COUNTS - course_id: {course_id}")
+        print(f"🔍 GET_COUNTS - counts: {counts}")
+
+        result = {
             "submitted": counts['submitted_count'],
             "total": counts['total_count'],
             "left": counts['players_left']
-        })
+        }
+
+        print(f"🔍 GET_COUNTS - returning: {result}")
+
+        return jsonify(result)
 
     except Exception as e:
+        print(f"❌ GET_COUNTS ERROR: {e}")
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
