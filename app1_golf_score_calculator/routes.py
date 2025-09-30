@@ -144,21 +144,17 @@ def admin_add_player():
         cursor.execute("SELECT MAX(course_id) FROM courses")
         course_id = cursor.fetchone()[0] or 1
 
-        # Check if player already exists for this course
+        # Check if player already exists for this course in players table
         cursor.execute("""
-            SELECT 1 FROM scores
+            SELECT 1 FROM players
             WHERE course_id = %s AND first_name = %s AND last_name = %s
         """, (course_id, first, last))
         if cursor.fetchone():
+            cursor.close()
+            conn.close()
             return jsonify(success=False, message=f"⚠️ {first} {last} already exists for this course.")
 
-        # Insert new player
-        cursor.execute("""
-            INSERT INTO scores (first_name, last_name, course_id)
-            VALUES (%s, %s, %s)
-        """, (first, last, course_id))
-
-        # Insert into players table too
+        # Insert into players table
         cursor.execute("""
             INSERT INTO players (first_name, last_name, course_id)
             VALUES (%s, %s, %s)
@@ -166,16 +162,33 @@ def admin_add_player():
 
         conn.commit()
 
-        # Refresh player list (MySQL-compliant)
+        # Get updated counts after addition
+        cursor.execute("SELECT COUNT(*) FROM players WHERE course_id = %s", (course_id,))
+        total_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM scores WHERE total IS NOT NULL AND course_id = %s", (course_id,))
+        submitted_count = cursor.fetchone()[0]
+
+        # Refresh player list from players table
         cursor.execute("""
             SELECT CONCAT(first_name, ' ', last_name) AS full_name
-            FROM scores
+            FROM players
             WHERE course_id = %s
-            GROUP BY first_name, last_name
-            ORDER BY full_name
+            ORDER BY first_name, last_name
         """, (course_id,))
         players = [row[0] for row in cursor.fetchall()]
-        return jsonify(success=True, message=f"✅ Added {first} {last}", players=players)
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(
+            success=True,
+            message=f"✅ Added {first} {last}",
+            players=players,
+            total_count=total_count,
+            submitted_count=submitted_count,
+            players_left=max(total_count - submitted_count, 0)
+        )
 
     except Exception as e:
         return jsonify(success=False, message=f"❌ DB Error: {e}")
@@ -213,17 +226,33 @@ def admin_remove_player():
 
         conn.commit()
 
-        # Refresh player list (MySQL-compliant)
+        # Get updated counts after removal
+        cursor.execute("SELECT COUNT(*) FROM players WHERE course_id = %s", (course_id,))
+        total_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM scores WHERE total IS NOT NULL AND course_id = %s", (course_id,))
+        submitted_count = cursor.fetchone()[0]
+
+        # Refresh player list from players table (not scores!)
         cursor.execute("""
             SELECT CONCAT(first_name, ' ', last_name) AS full_name
-            FROM scores
+            FROM players
             WHERE course_id = %s
-            GROUP BY first_name, last_name
-            ORDER BY full_name
+            ORDER BY first_name, last_name
         """, (course_id,))
         players = [row[0] for row in cursor.fetchall()]
 
-        return jsonify(success=True, message=f"🗑️ Removed {first} {last}", players=players)
+        cursor.close()
+        conn.close()
+
+        return jsonify(
+            success=True,
+            message=f"🗑️ Removed {first} {last}",
+            players=players,
+            total_count=total_count,
+            submitted_count=submitted_count,
+            players_left=max(total_count - submitted_count, 0)
+        )
 
     except Exception as e:
         return jsonify(success=False, message=f"❌ DB Error: {e}")
