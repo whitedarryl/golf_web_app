@@ -160,19 +160,40 @@ def preload_players_from_excel():
                 print("❌ Failed to add column to players table")
                 return []
         
-        # Clear existing players
-        cursor.execute("TRUNCATE TABLE players;")
-        print("🗑️ Cleared existing players table")
-        
-        # Insert new players
+        # Get current course_id
+        cursor.execute("SELECT COALESCE(MAX(course_id), 1) FROM courses")
+        course_id = cursor.fetchone()[0]
+
+        # Insert or update players (don't truncate!)
+        inserted = 0
+        updated = 0
         for name in players:
-            cursor.execute(f"INSERT INTO players ({name_column}) VALUES (%s);", (name,))
+            # Split name into first and last
+            parts = name.split(' ', 1)
+            first_name = parts[0]
+            last_name = parts[1] if len(parts) > 1 else ''
+
+            # Check if player already exists for this course
+            cursor.execute("""
+                SELECT id FROM players
+                WHERE first_name = %s AND last_name = %s AND course_id = %s
+            """, (first_name, last_name, course_id))
+
+            if cursor.fetchone():
+                updated += 1  # Already exists, skip
+            else:
+                # Insert new player
+                cursor.execute("""
+                    INSERT INTO players (first_name, last_name, course_id)
+                    VALUES (%s, %s, %s)
+                """, (first_name, last_name, course_id))
+                inserted += 1
         
         conn.commit()
         cursor.close()
         conn.close()
-        
-        print(f"✅ Preloaded {len(players)} players from Excel")
+
+        print(f"✅ Preloaded players from Excel: {inserted} new, {updated} existing")
         return players
     except Exception as e:
         print(f"❌ Error preloading players: {e}")
