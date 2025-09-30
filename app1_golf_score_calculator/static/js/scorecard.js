@@ -51,18 +51,15 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(res => res.json())
       .then(names => {
         playerNames = names.slice();
-        
+
         // Update Awesomplete
         if (awesomplete) {
           awesomplete.list = names;
         }
-        
-        // Update counter
-        const counterElement = document.querySelector(".players-left");
-        if (counterElement) {
-          counterElement.textContent = `${names.length} left`;
-        }
-        
+
+        // Don't update counter here - it should be updated by whoever calls this function
+        // The counter is managed separately via get_counts or the response from add/remove
+
         console.log(`🔄 Refreshed player list: ${names.length} players`);
       })
       .catch(err => console.error("Failed to refresh player names:", err));
@@ -182,9 +179,16 @@ document.addEventListener("DOMContentLoaded", function () {
           sort: Awesomplete.SORT_BYLENGTH
         });
 
-        // Add this line to update the counter
-        document.querySelector(".players-left").textContent = `${names.length} left`;
-        
+        // Fetch actual count data on page load
+        fetch("/golf_score_calculator/get_counts")
+          .then(r => r.json())
+          .then(ct => {
+            document.getElementById("submittedPlayers").textContent = ct.submitted;
+            document.getElementById("totalPlayers").textContent = ct.total;
+            document.querySelector(".players-left").textContent = `${ct.left} left`;
+          })
+          .catch(err => console.error("Failed to load counts:", err));
+
         console.log(`✅ Autocomplete ready with ${names.length} names`);
       })
       .catch(err => console.error("Failed to load names:", err));
@@ -251,16 +255,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const playerIndex = playerNames.indexOf(playerInput.value);
         if (playerIndex > -1) {
           playerNames.splice(playerIndex, 1);
-          
+
           // Update the Awesomplete list
           if (awesomplete) {
             awesomplete.list = playerNames;
           }
-          
-          // Update the counter display
-          const counterElement = document.querySelector(".players-left");
-          if (counterElement) {
-            counterElement.textContent = `${playerNames.length} left`;
+
+          // Update the counter display using data from the response
+          if (data.submitted_count !== undefined) {
+            document.getElementById("submittedPlayers").textContent = data.submitted_count;
+            document.getElementById("totalPlayers").textContent = data.total_count;
+            document.querySelector(".players-left").textContent = `${data.players_left} left`;
           }
         }
         
