@@ -1,2 +1,82 @@
+# Environment variables
 .env
 .env.*
+*.env
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Excel and data files
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+!*template*.xlsx
+!*template*.xls
+
+# Backup and temp files
+*~
+*.bak
+*.old
+*- Copy*
+*Copy.py
+*Copy.css
+*Copy.js
+*.tmp
+*.temp
+
+# Logs
+*.log
+logs/
+run_log.txt
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# PDF exports
+exports/*.pdf
+*.pdf
+
+# Test and debug files
+test_*.py
+debug_*.py
+*_test.py
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# System files
+Thumbs.db
+desktop.ini
+
+# Completed tournaments and historical data
+completed tournaments/
+past_tournaments/
+score_archive/*.csv
+score_archive/*.xlsx
+
+# Response files
+response.json
+F5BADB00

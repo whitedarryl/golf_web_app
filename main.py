@@ -1,38 +1,103 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'app1_golf_score_calculator')))
-from flask import Blueprint
-print("DEBUG: ", os.listdir("callaway_results_app"))
+import logging
+from flask import Flask, request
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.serving import run_simple
-sys.path.append(os.path.dirname(__file__))
+from dotenv import load_dotenv
+
+# Load environment variables from root .env file
+load_dotenv()
+
 from landing_page.app import app as landing_app
-from app1_golf_score_calculator.app import app as app1
-from app2_golf_script_runner.app import app as app2
-from callaway_results_app import create_app
-app3 = create_app()
-from app4_five_results.app import app as app4
-from app5_historical_data.app import app as app5
-from flask import send_from_directory
+from config import ROUTES
+from settings import CSS_FILE_PATH, STATIC_DIR
+from app1_golf_score_calculator import score_calc_bp
+from callaway_results_app import create_app as create_callaway_app
+from app1_golf_score_calculator.app import create_app
 
-css_path = os.path.join("static", "css", "scorecard.css")
-print("🧪 File exists at static/css/scorecard.css? ", os.path.exists(css_path))
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG if os.getenv('FLASK_DEBUG') == 'True' else logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-@landing_app.route('/static/<path:filename>')
-def static_from_root(filename):
-    return send_from_directory('static', filename)
+# Create app instances
+app = create_app()
+callaway_app = create_callaway_app()
 
-@landing_app.route('/test-css')
-def test_css():
-    return send_from_directory('static/css', 'scorecard.css')
+# Register routes
+ROUTES["/golf_score_calculator"] = app
+ROUTES["/callaway_results"] = callaway_app
 
-application = DispatcherMiddleware(landing_app, {
-    '/golf_score_calculator': app1,
-    '/golf_script_runner': app2,
-    '/callaway_results': app3,
-    '/five_results': app4,
-    '/historical_data': app5,
-})
+logger.info("✅ All routes registered successfully")
+
+# Validate critical files and directories
+if not os.path.exists(STATIC_DIR):
+    logger.error("Static directory not found: %s", STATIC_DIR)
+    sys.exit(1)  # Exit the application if the static directory is missing
+
+if not os.path.exists(CSS_FILE_PATH):
+    logger.warning("CSS file not found: %s", CSS_FILE_PATH)  # Log a warning but don't exit
+
+# Log the existence of the CSS file
+logger.debug("🧪 File exists at %s? %s", CSS_FILE_PATH, os.path.exists(CSS_FILE_PATH))
+
+# Log the static directory being used
+logger.debug("Static directory being used: %s", landing_app.static_folder)
+
+# Log the Flask static folder
+logger.debug("Flask static folder: %s", landing_app.static_folder)
+logger.debug("Flask static folder: %s", app.static_folder)
+
+logger.debug("Fonts directory exists: %s", os.path.exists(os.path.join(STATIC_DIR, 'fonts')))
+logger.debug("Font file exists: %s", os.path.exists(os.path.join(STATIC_DIR, 'fonts', 'Satisfy-Regular.woff2')))
+logger.debug("Images directory exists: %s", os.path.exists(os.path.join(STATIC_DIR, 'images')))
+logger.debug("Background image exists: %s", os.path.exists(os.path.join(STATIC_DIR, 'images', 'background.jpg')))
+
+@app.before_request
+def log_static_requests():
+    if request.path.startswith('/static'):
+        logger.debug("Static file requested: %s", request.path)
+
+# Combine the landing app with other apps using DispatcherMiddleware
+application = DispatcherMiddleware(landing_app, ROUTES)
+
+with landing_app.app_context():
+    print("\n📋 Registered Routes:")
+    if hasattr(application, 'url_map'):
+        for rule in application.url_map.iter_rules():
+            print(f"{rule.methods} {rule.rule}")
+    else:
+        print("🚫 application has no 'url_map'.")
+
+from config import ROUTES  # or wherever ROUTES is defined
+
+print("\n📋 Registered Flask Apps and Their Routes:")
+for path, app in ROUTES.items():
+    print(f"\n🔹 App mounted at: {path}")
+    try:
+        for rule in app.url_map.iter_rules():
+            print(f"  {rule.methods} {rule.rule}")
+    except Exception as e:
+        print(f"  🚫 Could not inspect app at {path}: {e}")
+
 
 if __name__ == '__main__':
-    run_simple('0.0.0.0', 5000, application, use_reloader=True, use_debugger=True)
+    # Determine the environment (default to 'production')
+    environment = os.getenv('FLASK_ENV', 'production').lower()
+    is_debug = environment == 'development'
+
+    logger.info("Starting the application in %s mode on http://0.0.0.0:5001", environment)
+    print("🚀 Registered Blueprints:", landing_app.blueprints)
+    
+    # Serve the combined app
+    run_simple(
+        '0.0.0.0',
+        5001,
+        application,           # 👈 use DispatcherMiddleware instance, not `app`
+        use_reloader=is_debug,
+        use_debugger=is_debug
+    )
+
