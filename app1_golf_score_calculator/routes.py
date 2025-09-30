@@ -270,25 +270,34 @@ def get_names():
     try:
         conn = mysql_connection()
         cursor = conn.cursor()
-        
-        # Since full names are stored in first_name column, just return those
+
+        # Get current course_id
+        cursor.execute("SELECT COALESCE(MAX(course_id), 1) FROM courses")
+        course_id = cursor.fetchone()[0]
+
+        # Get full names by concatenating first_name and last_name
         cursor.execute("""
-            SELECT first_name
-            FROM players 
-            WHERE first_name IS NOT NULL 
+            SELECT CONCAT(first_name, ' ', last_name) AS full_name
+            FROM players
+            WHERE course_id = %s
+            AND first_name IS NOT NULL
+            AND last_name IS NOT NULL
             AND TRIM(first_name) != ''
-            ORDER BY first_name
-        """)
-        
+            AND TRIM(last_name) != ''
+            ORDER BY first_name, last_name
+        """, (course_id,))
+
         results = cursor.fetchall()
         names = [row[0] for row in results if row[0] is not None]
-        
+
         cursor.close()
         conn.close()
-        print(f"✅ Returning {len(names)} player names from first_name column")
+        print(f"✅ Returning {len(names)} full player names for course {course_id}")
         return jsonify(names)
     except Exception as e:
         print(f"❌ Error fetching names: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify([])
     
 
