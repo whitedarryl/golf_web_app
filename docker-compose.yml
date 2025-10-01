@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: golf_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-golf_scores}
+      MYSQL_USER: ${DB_USER:-golf_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-golf_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - golf_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flask Application
+  web:
+    build: .
+    container_name: golf_web
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-golf_user}
+      DB_PASSWORD: ${DB_PASSWORD:-golf_password}
+      DB_NAME: ${DB_NAME:-golf_scores}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-this}
+    volumes:
+      - .:/app
+      - ./score_archive:/app/score_archive
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - golf_network
+
+networks:
+  golf_network:
+    driver: bridge
+
+volumes:
+  mysql_data:

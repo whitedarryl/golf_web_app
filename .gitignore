@@ -80,3 +80,7 @@ score_archive/*.xlsx
 # Response files
 response.json
 F5BADB00
+
+# Docker volumes and data (keep configuration files)
+docker/mysql_data/
+.docker/
