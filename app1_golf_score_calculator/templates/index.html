@@ -3,64 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <title>Golf Score Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- CSS Resets and Global Rules -->
+  <style>
+    html, body { 
+      overflow-x: hidden; 
+      margin: 0; 
+      padding: 0; 
+      width: 100%; 
+    }
+  </style>
 
-  <!-- ✅ Fonts -->
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Satisfy&display=swap" rel="stylesheet">
 
-  <!-- ✅ App-specific stylesheet -->
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/scorecard.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/awesomplete.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  
-  <style>
-    body {
-      animation: fadeInBg 1.5s ease-in;
-    }
-    @keyframes fadeInBg {
-      from {
-        background-color: #fff;
-        opacity: 0.2;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-  </style>
 </head>
 
-<!-- ✅ Background image -->
-<body style="
-  background-image: url('{{ url_for('static', filename='images/scorecard-bg.jpg') }}');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  min-height: 100vh;
-">
+<body>
 
-  <div class="scorecard">
-    <h1>🏌️ Tony G's {{ course_name }} Tournament</h1>
-    {% if course_date %}
-      <p class="course-date">{{ course_date }}</p>
-    {% endif %}
+<div class="scorecard">
+  <input type="hidden" id="courseId" value="{{ course_id }}">
+  <h1>🏌️ Tony G's Golf Tournament</h1>
+  {% if course_date %}
+    <p class="course-date">{{ course_date }}</p>
+  {% endif %}
 
-    <div class="player-row">
+  <div class="player-row">
+    <form id="playerForm" onsubmit="return false;">
       <label for="playerName">Player:</label>
-      <input id="playerName" placeholder="Start typing a name..." autocomplete="off" />
+      <input id="playerName" 
+       class="awesomplete" 
+       autocomplete="off" 
+       autocorrect="off" 
+       autocapitalize="off" 
+       spellcheck="false"
+       data-form-type="other"
+       placeholder="Start typing a name..." />
       <span id="progress" class="progress-text">
-        {{ submitted_count }} of {{ total_count }} players submitted |
-        <strong class="players-left">✔️ {{ players_left }} left</strong>
+        <span id="submissionStatus">
+          <span id="submittedPlayers">{{ submitted_count }}</span> of 
+          <span id="totalPlayers">{{ total_count }}</span> players submitted |
+        </span>
+        <strong class="players-left">✔️ {{ players_left }} left</strong>        
       </span>
-      
       <div id="progress-bar"></div>
-    </div>
+    </form>
+  </div>
 
+  <!-- Corrected Table Wrapper -->
+  <div class="score-table-wrapper">
     <table class="score-table">
       <thead>
         <tr>
           <th>Hole</th>
-          {% for i in range(1, 10) %}
-            <th>{{ i }}</th>
-          {% endfor %}
+          {% for i in range(1, 10) %}<th>{{ i }}</th>{% endfor %}
           <th>OUT</th>
         </tr>
       </thead>
@@ -73,13 +74,10 @@
           <td><span id="outTotal">0</span></td>
         </tr>
       </tbody>
-
       <thead>
         <tr>
           <th>Hole</th>
-          {% for i in range(10, 19) %}
-            <th>{{ i }}</th>
-          {% endfor %}
+          {% for i in range(10, 19) %}<th>{{ i }}</th>{% endfor %}
           <th>IN</th>
         </tr>
       </thead>
@@ -92,7 +90,6 @@
           <td><span id="inTotal">0</span></td>
         </tr>
       </tbody>
-
       <tfoot>
         <tr>
           <th colspan="10">TOTAL</th>
@@ -100,25 +97,159 @@
         </tr>
       </tfoot>
     </table>
-
-    <button id="submitBtn" disabled>Submit Scores</button>
   </div>
 
-  <!-- ✅ JS -->
-  <script src="{{ url_for('static', filename='js/awesomplete.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/scorecard.js') }}"></script>
-  <script>
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-  
-      setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
-    }
-  </script>  
+  <button id="submitBtn" disabled>Submit Scores</button>
 
-  <div id="toast" class="toast-message" style="display: none;"></div>
+<!-- updated home-button-container without Back to Home -->
+<div class="home-button-container">
+  <a href="/callaway_results/" class="home-button">📊 View Callaway Results</a>
+  <form id="tourneyRunner" enctype="multipart/form-data">
+    <input type="hidden" id="coursePar"  name="course_par"   value="{{ course_par }}">
+    <button type="button" id="runScriptsBtn" class="home-button">🏌️‍♂️ Run Scripts</button>
+  </form>
+</div>
+
+<!-- updated adminControls with Back to Home -->
+<div id="adminControls" style="display: none; margin-top: 1rem;">
+  <button id="simulateBtn" class="home-button">🧪 Simulate Full Round</button>
+  <button id="resetScoresBtn" class="home-button red-alert">❌ Reset All Scores (Dev Only)</button>
+  <button id="clearFivesBtn" class="home-button red-alert">🗑️ Clear Fives Table</button>
+  <button id="toggleSubmissionStatus" class="home-button" type="button">🕵️ Toggle Submission Info</button>
+  <button id="exportBtn" class="home-button">📤 Export to Excel</button>
+  <button id="exportArchiveBtn" class="home-button">📦 Export to Archive</button>
+
+    <!-- ✅ Fixed container for Add/Remove Player controls -->
+  <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+    <input id="newPlayerInput"
+          placeholder="Enter First Last"
+          style="padding: 0.5rem; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; width: 220px;" />
+    <button id="addPlayerBtn" class="home-button" style="background-color: #2e7d32; color: white;">➕ Add Player</button>
+    <button id="removePlayerBtn" class="home-button red-alert" style="background-color: #c62828; color: white;">➖ Remove Player</button>
+  </div>
+
+  <div id="exportProgress" style="display:none; margin-top: 10px;">
+    <progress id="exportBar" max="100" value="0" style="width: 100%;"></progress>
+  </div>
+
+  <a href="/" class="home-button">🏠 Back to Home</a>
+</div>
+
+<div id="spinner" style="display: none;">⏳ Running scripts...</div>
+<!-- Log Toggle and Output -->
+<div id="logSection" style="margin-top: 2rem; text-align: center;">
+  <button id="toggleLogsBtn" style="display: none;">👀 Show Logs</button>
+  <pre id="output" style="display: none; background: #111; color: #0f0; padding: 1rem; max-height: 400px; overflow-y: auto; text-align: left; border-radius: 6px;"></pre>
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/awesomplete.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tournament-runner.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scorecard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scorecard-scripts.js') }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const adminControls = document.getElementById("adminControls");
+    if (adminControls) adminControls.style.display = "none";
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "F2") {
+        adminControls.style.display = adminControls.style.display === "block" ? "none" : "block";
+      }
+    });
+  });
+</script>
+<div id="toast" style="
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #222;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  z-index: 9999;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+"></div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const testInput = document.getElementById("playerName");
+    console.log("🔍 Checking DOM...", testInput);
+
+    // Watch ul.awesomplete
+    setInterval(() => {
+      const ul = document.querySelector("ul.awesomplete");
+      if (ul) {
+        ul.style.border = "2px solid red";
+        ul.style.display = "block";
+        ul.style.position = "absolute";
+        console.log("📌 Found dropdown:", ul);
+      }
+    }, 500);
+  });
+</script>
+
+<script>
+  document.getElementById("runScriptsBtn").addEventListener("click", async () => {
+    // const courseName = document.getElementById("courseName").value.trim();
+    // const courseDate = document.getElementById("courseDate").value.trim();
+
+    // // Optional: Client-side validation
+    // if (!courseName || courseName.toLowerCase().includes("name") || /[^a-z0-9\s]/i.test(courseName)) {
+    //   alert("❌ Invalid course name. Please check and try again.");
+    //   return;
+    // }
+
+    // const res = await fetch("/set_session", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    //   body: new URLSearchParams({
+    //     course_name: courseName,
+    //     course_date: courseDate
+    //   })
+    // });
+
+    // if (!res.ok) {
+    //   alert("❌ Could not set course session. Please check inputs.");
+    //   return;
+    // }
+
+    console.log("✅ Skipping course_name/session logic.");
+
+    // Now run the backend scripts
+    document.getElementById("spinner").style.display = "block";
+    const r = await fetch("/golf_score_calculator/run_tournament_scripts_v2", { method: "POST" });
+    const text = await r.text();
+    document.getElementById("output").textContent = text;
+    document.getElementById("output").style.display = "block";
+    document.getElementById("toggleLogsBtn").style.display = "inline-block";
+    document.getElementById("spinner").style.display = "none";
+    document.addEventListener("DOMContentLoaded", function () {
+        const exportArchiveBtn = document.getElementById("exportArchiveBtn");
+        if (!exportArchiveBtn) {
+            console.error("❌ Export Archive button not found in DOM.");
+            return;
+        }
+
+        exportArchiveBtn.addEventListener("click", async () => {
+            if (!confirm("📦 Export all scores to the archive table?")) return;
+
+            console.log("📤 Sending export request...");
+            try {
+                const res = await fetch("/export_to_archive", { method: "POST" });
+                const data = await res.json();
+                console.log("✅ Export response:", data);
+                alert(data.message || "✅ Export completed.");
+            } catch (err) {
+                console.error("❌ Export failed:", err);
+                alert("❌ Export failed. Check console for details.");
+            }
+        });
+    });
+  });
+</script>
+
 </body>
 </html>
