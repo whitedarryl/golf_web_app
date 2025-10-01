@@ -145,49 +145,45 @@ def admin_add_player():
         return jsonify(success=False, message="⚠️ First and last name required.")
 
     try:
-        conn = mysql_connection()
-        cursor = conn.cursor()
+        from utils.db import get_db_connection, get_latest_course_id
 
-        # Get latest course_id
-        cursor.execute("SELECT MAX(course_id) FROM courses")
-        course_id = cursor.fetchone()[0] or 1
+        course_id = get_latest_course_id()
 
-        # Check if player already exists for this course in players table
-        cursor.execute("""
-            SELECT 1 FROM players
-            WHERE course_id = %s AND first_name = %s AND last_name = %s
-        """, (course_id, first, last))
-        if cursor.fetchone():
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            # Check if player already exists for this course in players table
+            cursor.execute("""
+                SELECT 1 FROM players
+                WHERE course_id = %s AND first_name = %s AND last_name = %s
+            """, (course_id, first, last))
+            if cursor.fetchone():
+                return jsonify(success=False, message=f"⚠️ {first} {last} already exists for this course.")
+
+            # Insert into players table
+            cursor.execute("""
+                INSERT INTO players (first_name, last_name, course_id)
+                VALUES (%s, %s, %s)
+            """, (first, last, course_id))
+
+            conn.commit()
+
+            # Get updated counts after addition
+            cursor.execute("SELECT COUNT(*) FROM players WHERE course_id = %s", (course_id,))
+            total_count = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM scores WHERE total IS NOT NULL AND course_id = %s", (course_id,))
+            submitted_count = cursor.fetchone()[0]
+
+            # Refresh player list from players table
+            cursor.execute("""
+                SELECT CONCAT(first_name, ' ', last_name) AS full_name
+                FROM players
+                WHERE course_id = %s
+                ORDER BY first_name, last_name
+            """, (course_id,))
+            players = [row[0] for row in cursor.fetchall()]
             cursor.close()
-            conn.close()
-            return jsonify(success=False, message=f"⚠️ {first} {last} already exists for this course.")
-
-        # Insert into players table
-        cursor.execute("""
-            INSERT INTO players (first_name, last_name, course_id)
-            VALUES (%s, %s, %s)
-        """, (first, last, course_id))
-
-        conn.commit()
-
-        # Get updated counts after addition
-        cursor.execute("SELECT COUNT(*) FROM players WHERE course_id = %s", (course_id,))
-        total_count = cursor.fetchone()[0]
-
-        cursor.execute("SELECT COUNT(*) FROM scores WHERE total IS NOT NULL AND course_id = %s", (course_id,))
-        submitted_count = cursor.fetchone()[0]
-
-        # Refresh player list from players table
-        cursor.execute("""
-            SELECT CONCAT(first_name, ' ', last_name) AS full_name
-            FROM players
-            WHERE course_id = %s
-            ORDER BY first_name, last_name
-        """, (course_id,))
-        players = [row[0] for row in cursor.fetchall()]
-
-        cursor.close()
-        conn.close()
 
         return jsonify(
             success=True,
